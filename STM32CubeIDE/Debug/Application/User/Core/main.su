@@ -1,0 +1,15 @@
+../../Core/Inc/bmp280.c:37:16:BMP_ReadReg	40	static
+../../Core/Inc/bmp280.c:49:13:BMP_ReadRegs	32	static
+../../Core/Inc/bmp280.c:59:13:BMP_WriteReg	32	static
+../../Core/Inc/bmp280.c:85:13:BMP_ReadCalibration	32	static
+../../Core/Inc/bmp280.c:106:16:BMP_CompensateTemp	24	static
+../../Core/Inc/bmp280.c:121:17:BMP_CompensatePressure	208	static
+../../Core/Inc/bmp280.c:150:13:Log	16	static
+../../Core/Inc/bmp280.c:161:6:BMP280_RunDemo	136	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:72:5:main	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:120:6:SystemClock_Config	104	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:160:13:MX_ADC1_Init	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:235:13:MX_SPI2_Init	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:276:13:MX_USART3_UART_Init	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:324:13:MX_GPIO_Init	56	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:399:6:Error_Handler	8	static,ignoring_inline_asm

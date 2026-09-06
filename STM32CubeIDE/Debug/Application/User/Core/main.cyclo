@@ -1,0 +1,15 @@
+../../Core/Inc/bmp280.c:37:16:BMP_ReadReg	1
+../../Core/Inc/bmp280.c:49:13:BMP_ReadRegs	1
+../../Core/Inc/bmp280.c:59:13:BMP_WriteReg	1
+../../Core/Inc/bmp280.c:85:13:BMP_ReadCalibration	1
+../../Core/Inc/bmp280.c:106:16:BMP_CompensateTemp	1
+../../Core/Inc/bmp280.c:121:17:BMP_CompensatePressure	3
+../../Core/Inc/bmp280.c:150:13:Log	1
+../../Core/Inc/bmp280.c:161:6:BMP280_RunDemo	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:72:5:main	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:120:6:SystemClock_Config	3
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:160:13:MX_ADC1_Init	5
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:235:13:MX_SPI2_Init	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:276:13:MX_USART3_UART_Init	5
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:324:13:MX_GPIO_Init	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:399:6:Error_Handler	1
