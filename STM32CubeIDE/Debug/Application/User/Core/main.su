@@ -6,10 +6,26 @@
 ../../Core/Inc/bmp280.c:121:17:BMP_CompensatePressure	208	static
 ../../Core/Inc/bmp280.c:150:13:Log	16	static
 ../../Core/Inc/bmp280.c:161:6:BMP280_RunDemo	136	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:72:5:main	8	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:120:6:SystemClock_Config	104	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:160:13:MX_ADC1_Init	24	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:235:13:MX_SPI2_Init	8	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:276:13:MX_USART3_UART_Init	8	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:324:13:MX_GPIO_Init	56	static
-/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:399:6:Error_Handler	8	static,ignoring_inline_asm
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:40:20:W25Q64_CS_Low	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:45:20:W25Q64_CS_High	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:55:20:W25Q64_SPI_Tx	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:60:20:W25Q64_SPI_Rx	40	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:69:13:W25Q64_SendAddr	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:81:6:W25Q64_Init	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:88:10:W25Q64_ReadJEDECID	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:101:6:W25Q64_IsBusy	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:114:6:W25Q64_WaitUntilReady	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:121:13:W25Q64_WriteEnable	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:129:6:W25Q64_ReadData	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:139:6:W25Q64_PageProgram	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:161:6:W25Q64_WritePages	40	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:183:6:W25Q64_SectorErase	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:195:6:W25Q64_ChipErase	16	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:209:6:W25Q64_demo	72	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:74:5:main	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:128:6:SystemClock_Config	104	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:168:13:MX_ADC1_Init	24	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:243:13:MX_SPI2_Init	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:284:13:MX_USART3_UART_Init	8	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:332:13:MX_GPIO_Init	56	static
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:407:6:Error_Handler	8	static,ignoring_inline_asm

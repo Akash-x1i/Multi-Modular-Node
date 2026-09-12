@@ -35,7 +35,9 @@ Application/User/Core/main.o: \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_spi_ex.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart_ex.h \
- ../../Core/Inc/bmp280.c ../../Core/Inc/main.h
+ ../../Core/Inc/bmp280.c ../../Core/Inc/main.h \
+ /home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/w25q64.c \
+ ../../Core/Inc/w25q64.h
 ../../Core/Inc/main.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal.h:
 ../../Core/Inc/stm32u0xx_hal_conf.h:
@@ -73,3 +75,5 @@ Application/User/Core/main.o: \
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart_ex.h:
 ../../Core/Inc/bmp280.c:
 ../../Core/Inc/main.h:
+/home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/w25q64.c:
+../../Core/Inc/w25q64.h:

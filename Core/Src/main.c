@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "bmp280.c"
+#include "w25q64.c"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -44,9 +45,10 @@ ADC_HandleTypeDef hadc1;
 
 SPI_HandleTypeDef hspi2;
 
-UART_HandleTypeDef huart3;
+//UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+
 
 /* USER CODE END PV */
 
@@ -97,9 +99,15 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_SPI2_Init();
-  MX_USART3_UART_Init();
+  W25Q64_Init(&hspi2);
+//  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  BMP280_RunDemo();
+
+
+  //  BMP280_RunDemo();
+    W25Q64_demo();
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
