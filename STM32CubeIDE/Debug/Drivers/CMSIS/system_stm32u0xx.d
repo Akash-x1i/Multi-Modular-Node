@@ -32,6 +32,8 @@ Drivers/CMSIS/system_stm32u0xx.o: \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_pwr_ex.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_spi.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_spi_ex.h \
+ ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_tim.h \
+ ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_tim_ex.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart_ex.h
 ../../Drivers/CMSIS/Device/ST/STM32U0xx/Include/stm32u0xx.h:
@@ -66,5 +68,7 @@ Drivers/CMSIS/system_stm32u0xx.o: \
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_pwr_ex.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_spi.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_spi_ex.h:
+../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_tim.h:
+../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_tim_ex.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_uart_ex.h:

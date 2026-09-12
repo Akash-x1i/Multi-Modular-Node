@@ -1,5 +1,5 @@
-Drivers/STM32U0xx_HAL_Driver/stm32u0xx_hal_pwr.o: \
- /home/akash/Documents/SIH26/Multi\ Modular\ Node/Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_pwr.c \
+Drivers/STM32U0xx_HAL_Driver/stm32u0xx_hal_tim_ex.o: \
+ /home/akash/Documents/SIH26/Multi\ Modular\ Node/Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_tim_ex.c \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal.h \
  ../../Core/Inc/stm32u0xx_hal_conf.h \
  ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal_rcc.h \

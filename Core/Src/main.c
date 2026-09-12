@@ -20,6 +20,7 @@
 #include "main.h"
 #include "bmp280.c"
 #include "w25q64.c"
+#include "dht22.c"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -45,6 +46,8 @@ ADC_HandleTypeDef hadc1;
 
 SPI_HandleTypeDef hspi2;
 
+TIM_HandleTypeDef htim6;
+
 //UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
@@ -58,6 +61,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,13 +103,17 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_SPI2_Init();
+  MX_TIM6_Init();
+  HAL_TIM_Base_Start(&htim6);
   W25Q64_Init(&hspi2);
+  DHT22_Init(&htim6);
 //  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
 
   //  BMP280_RunDemo();
-    W25Q64_demo();
+//    W25Q64_demo();
+    DHT22_Demo();
 
 
   /* USER CODE END 2 */
@@ -275,6 +283,36 @@ static void MX_SPI2_Init(void)
 
 }
 
+
+/**
+  * @brief TIM6 Initialization Function
+  * @note  Free-running 1 MHz counter used as a microsecond timebase for the
+  *        DHT22 one-wire bit-banging (this Cortex-M0+ core has no DWT cycle
+  *        counter). SystemClock_Config() leaves SYSCLK/HCLK/PCLK1 all at
+  *        HSI16 (APB1 prescaler = 1), so TIM6CLK = 16 MHz here.
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 15; /* 16MHz / (15+1) = 1MHz -> 1 tick = 1us */
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 0xFFFF;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
 
 /**
   * @brief USART3 Initialization Function
