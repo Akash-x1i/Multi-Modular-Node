@@ -16,6 +16,10 @@ currently active in `main.c` vs. wired-but-disabled.
 
 ## Pinout
 
+![](Doc/DV-10127_001_1__16823.jpg)
+
+![](Doc/NRF24L01-Pinout-NRF24L01-PA-LNA-.png)
+
 ![STM32U031F8Px pinout (CubeMX pinout view, TSSOP20)](Doc/STM%20U031%20Pin%20Config.png)
 
 | Signal | MCU Pin | Port | Mode | Used by |
