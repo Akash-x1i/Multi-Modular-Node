@@ -21,6 +21,7 @@
 #include "bmp280.c"
 #include "w25q64.c"
 #include "dht22.c"
+#include "mq135.c"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -107,14 +108,14 @@ int main(void)
   HAL_TIM_Base_Start(&htim6);
   W25Q64_Init(&hspi2);
   DHT22_Init(&htim6);
+  MQ135_Init(&hadc1);
 //  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
 
   //  BMP280_RunDemo();
-//    W25Q64_demo();
-    DHT22_Demo();
-
+  //  W25Q64_demo();
+      MQ135_Demo();
 
   /* USER CODE END 2 */
 
@@ -122,9 +123,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    DHT22_Data_t dht_reading = {0};
+    (void)DHT22_Read(&dht_reading);   /* result also in g_dht22_status/g_dht22_data/g_dht22_raw */
+    (void)MQ135_Read();               /* result also in g_mq135_data */
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_Delay(2000);
   }
   /* USER CODE END 3 */
 }
@@ -212,7 +218,7 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
 
-  /** Configure Regular Channel
+  /** Configure Regular Channel : TURBIDITY_ADC (PA0)
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -222,16 +228,18 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
 
-  /** Configure Regular Channel
+  /** Configure Regular Channel : MQ135_ADC (PA3)
   */
+  sConfig.Channel = ADC_CHANNEL_7;
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /** Configure Regular Channel
+  /** Configure Regular Channel : BAT_ADC (PA5)
   */
+  sConfig.Channel = ADC_CHANNEL_9;
   sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {

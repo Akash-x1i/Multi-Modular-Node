@@ -32,6 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+extern ADC_HandleTypeDef hadc1;
 extern SPI_HandleTypeDef hspi2;
 extern UART_HandleTypeDef huart3;
 
