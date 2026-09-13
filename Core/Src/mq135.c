@@ -24,7 +24,7 @@
 #define MQ135_CO2_CURVE_A    116.6020682f
 #define MQ135_CO2_CURVE_B    2.769034857f
 
-#define MQ135_ADC_TIMEOUT_MS 10U
+#define MQ135_ADC_TIMEOUT_MS HAL_MAX_DELAY /* TEMP: was 10U - waiting forever to see if rank 2 ever completes */
 
 static ADC_HandleTypeDef *mq_adc;
 
@@ -34,10 +34,10 @@ void MQ135_Init(ADC_HandleTypeDef *hadc)
 {
     mq_adc = hadc;
 }
-
+MQ135_Data_t d = {0};
 MQ135_Data_t MQ135_Read(void)
 {
-    MQ135_Data_t d = {0};
+
     uint32_t conv[3] = {0}; /* rank1=TURBIDITY, rank2=MQ135, rank3=BAT - see MX_ADC1_Init() */
     uint8_t ok = 1;
 
