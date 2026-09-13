@@ -22,6 +22,7 @@
 #include "w25q64.c"
 #include "dht22.c"
 #include "mq135.c"
+#include "nrf24.c"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -107,15 +108,15 @@ int main(void)
   MX_TIM6_Init();
   HAL_TIM_Base_Start(&htim6);
   W25Q64_Init(&hspi2);
-  DHT22_Init(&htim6);
-  MQ135_Init(&hadc1);
+//  DHT22_Init(&htim6);
+//  MQ135_Init(&hadc1); /* MQ135 disconnected - see mq135.c/mq135.h if reconnected */
+  NRF24_Init(&hspi2);
 //  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
 
   //  BMP280_RunDemo();
   //  W25Q64_demo();
-      MQ135_Demo();
 
   /* USER CODE END 2 */
 
@@ -123,9 +124,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    DHT22_Data_t dht_reading = {0};
-    (void)DHT22_Read(&dht_reading);   /* result also in g_dht22_status/g_dht22_data/g_dht22_raw */
-    (void)MQ135_Read();               /* result also in g_mq135_data */
+    static uint32_t seq = 0;
+    uint8_t nrf_payload[NRF24_PAYLOAD_SIZE] = {0};
+
+//  DHT22_Data_t dht_reading = {0};
+//  (void)DHT22_Read(&dht_reading);   /* result also in g_dht22_status/g_dht22_data/g_dht22_raw */
+//  (void)MQ135_Read();               /* MQ135 disconnected */
+
+    memcpy(nrf_payload, &seq, sizeof(seq));
+    (void)NRF24_Transmit(nrf_payload, sizeof(nrf_payload)); /* result also in g_nrf24_tx_status */
+    seq++;
 
     /* USER CODE END WHILE */
 

@@ -24,7 +24,7 @@
 #define MQ135_CO2_CURVE_A    116.6020682f
 #define MQ135_CO2_CURVE_B    2.769034857f
 
-#define MQ135_ADC_TIMEOUT_MS HAL_MAX_DELAY /* TEMP: was 10U - waiting forever to see if rank 2 ever completes */
+#define MQ135_ADC_TIMEOUT_MS 10U
 
 static ADC_HandleTypeDef *mq_adc;
 

@@ -43,7 +43,9 @@ Application/User/Core/main.o: \
  /home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/dht22.c \
  ../../Core/Inc/dht22.h \
  /home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/mq135.c \
- ../../Core/Inc/mq135.h
+ ../../Core/Inc/mq135.h \
+ /home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/nrf24.c \
+ ../../Core/Inc/nrf24.h
 ../../Core/Inc/main.h:
 ../../Drivers/STM32U0xx_HAL_Driver/Inc/stm32u0xx_hal.h:
 ../../Core/Inc/stm32u0xx_hal_conf.h:
@@ -89,3 +91,5 @@ Application/User/Core/main.o: \
 ../../Core/Inc/dht22.h:
 /home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/mq135.c:
 ../../Core/Inc/mq135.h:
+/home/akash/Documents/SIH26/Multi\ Modular\ Node/Core/Src/nrf24.c:
+../../Core/Inc/nrf24.h:
