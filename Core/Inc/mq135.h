@@ -46,6 +46,13 @@ typedef struct {
  * Expressions / watch window the same way as the DHT22 driver's g_dht22_*. */
 extern volatile MQ135_Data_t g_mq135_data;
 
+/* Extra diagnostics for the shared 3-channel scan - which rank (if any)
+ * timed out, and whatever raw ADC codes were actually obtained before that
+ * happened (0=TURBIDITY rank1, 1=MQ135 rank2, 2=BAT rank3 - see
+ * MX_ADC1_Init()). g_mq135_fail_rank is -1 if the last read fully succeeded. */
+extern volatile int8_t   g_mq135_fail_rank;
+extern volatile uint32_t g_mq135_conv_raw[3];
+
 /* Call once after MX_ADC1_Init(); does not start the ADC itself. */
 void MQ135_Init(ADC_HandleTypeDef *hadc);
 

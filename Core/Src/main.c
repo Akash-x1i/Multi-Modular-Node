@@ -31,6 +31,22 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+/* Wire format sent to the ESP32 gateway over NRF24 - 24 of the 32 payload
+ * bytes used, rest zero-padded. MUST stay byte-for-byte identical to the
+ * TelemetryPacket_t struct in Gateway_ESP32/Gateway_ESP32.ino (packed,
+ * fixed-width fields, same order) - both sides are plain GCC so the layout
+ * matches as long as neither struct's field order/types change independently. */
+typedef struct __attribute__((packed)) {
+    uint32_t seq;
+    float    bmp_temp_c;
+    float    bmp_pressure_hpa;
+    float    mq135_ratio;
+    float    mq135_ppm_co2;
+    uint16_t mq135_raw;
+    uint8_t  bmp_ok;
+    uint8_t  mq135_ok;
+} TelemetryPacket_t; /* 24 bytes */
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,6 +68,11 @@ TIM_HandleTypeDef htim6;
 
 //UART_HandleTypeDef huart3;
 
+/* TEMPORARY DIAGNOSTIC - see MQ135_ChannelIsolationTest() below. Not part of
+ * the normal driver; remove once the rank-2 ADC issue is understood. */
+volatile uint8_t  g_mq135_isolation_ok  = 0;
+volatile uint32_t g_mq135_isolation_raw = 0;
+
 /* USER CODE BEGIN PV */
 
 
@@ -65,11 +86,73 @@ static void MX_SPI2_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void MQ135_ChannelIsolationTest(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/* TEMPORARY DIAGNOSTIC - reconfigures hadc1 for a single-channel (MQ135,
+ * ADC_CHANNEL_7 / PA3) conversion with no scan sequence at all, to find out
+ * whether channel 7 works in isolation or whether it's specifically the
+ * multi-rank scan that gets stuck on it. Restores the normal 3-channel scan
+ * config via MX_ADC1_Init() before returning. Remove this whole function
+ * (and its call in main(), and g_mq135_isolation_*) once the mystery's solved. */
+static void MQ135_ChannelIsolationTest(void)
+{
+    ADC_ChannelConfTypeDef sConfig = {0};
+
+    HAL_ADC_DeInit(&hadc1);
+
+    hadc1.Instance = ADC1;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
+    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;   /* single channel, no scan */
+    hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    hadc1.Init.LowPowerAutoWait = DISABLE;
+    hadc1.Init.LowPowerAutoPowerOff = DISABLE;
+    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.NbrOfConversion = 1;
+    hadc1.Init.DiscontinuousConvMode = DISABLE;
+    hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc1.Init.DMAContinuousRequests = DISABLE;
+    hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+    hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
+    hadc1.Init.OversamplingMode = DISABLE;
+    hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
+    if (HAL_ADC_Init(&hadc1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    sConfig.Channel = ADC_CHANNEL_7; /* MQ135, PA3 - alone this time, as rank 1 */
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    HAL_ADC_Start(&hadc1);
+    if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK)
+    {
+        g_mq135_isolation_raw = HAL_ADC_GetValue(&hadc1);
+        g_mq135_isolation_ok = 1;
+    }
+    else
+    {
+        g_mq135_isolation_raw = 0;
+        g_mq135_isolation_ok = 0;
+    }
+    HAL_ADC_Stop(&hadc1);
+
+    /* Restore the real 3-channel scan config exactly as MX_ADC1_Init() set it */
+    HAL_ADC_DeInit(&hadc1);
+    MX_ADC1_Init();
+}
 
 /* USER CODE END 0 */
 
@@ -108,8 +191,9 @@ int main(void)
   MX_TIM6_Init();
   HAL_TIM_Base_Start(&htim6);
   W25Q64_Init(&hspi2);
-//  DHT22_Init(&htim6);
-//  MQ135_Init(&hadc1); /* MQ135 disconnected - see mq135.c/mq135.h if reconnected */
+//  DHT22_Init(&htim6);    /* DHT22 not part of this node's wiring - see README */
+  BMP280_Init();
+  MQ135_Init(&hadc1);
   NRF24_Init(&hspi2);
 //  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
@@ -118,6 +202,8 @@ int main(void)
   //  BMP280_RunDemo();
   //  W25Q64_demo();
 
+  MQ135_ChannelIsolationTest(); /* TEMPORARY - result in g_mq135_isolation_ok/_raw */
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,14 +211,23 @@ int main(void)
   while (1)
   {
     static uint32_t seq = 0;
-    uint8_t nrf_payload[NRF24_PAYLOAD_SIZE] = {0};
+    TelemetryPacket_t packet = {0};
+    BMP280_Data_t bmp_reading = {0};
+    MQ135_Data_t  mq_reading;
 
-//  DHT22_Data_t dht_reading = {0};
-//  (void)DHT22_Read(&dht_reading);   /* result also in g_dht22_status/g_dht22_data/g_dht22_raw */
-//  (void)MQ135_Read();               /* MQ135 disconnected */
+    packet.seq = seq;
 
-    memcpy(nrf_payload, &seq, sizeof(seq));
-    (void)NRF24_Transmit(nrf_payload, sizeof(nrf_payload)); /* result also in g_nrf24_tx_status */
+    packet.bmp_ok = (BMP280_Read(&bmp_reading) == BMP280_OK) ? 1U : 0U; /* also in g_bmp280_status/g_bmp280_data */
+    packet.bmp_temp_c       = bmp_reading.temperature_c;
+    packet.bmp_pressure_hpa = bmp_reading.pressure_hpa;
+
+    mq_reading = MQ135_Read(); /* also in g_mq135_data */
+    packet.mq135_ok       = mq_reading.ok;
+    packet.mq135_ratio    = mq_reading.ratio;
+    packet.mq135_ppm_co2  = mq_reading.ppm_co2;
+    packet.mq135_raw      = mq_reading.raw;
+
+    (void)NRF24_Transmit((uint8_t *)&packet, sizeof(packet)); /* result also in g_nrf24_tx_status */
     seq++;
 
     /* USER CODE END WHILE */

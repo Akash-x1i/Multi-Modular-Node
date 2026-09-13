@@ -28,18 +28,21 @@
 
 static ADC_HandleTypeDef *mq_adc;
 
-volatile MQ135_Data_t g_mq135_data = {0};
+volatile MQ135_Data_t g_mq135_data       = {0};
+volatile int8_t       g_mq135_fail_rank  = -1;
+volatile uint32_t     g_mq135_conv_raw[3] = {0};
 
 void MQ135_Init(ADC_HandleTypeDef *hadc)
 {
     mq_adc = hadc;
 }
-MQ135_Data_t d = {0};
+
 MQ135_Data_t MQ135_Read(void)
 {
-
+    MQ135_Data_t d = {0};
     uint32_t conv[3] = {0}; /* rank1=TURBIDITY, rank2=MQ135, rank3=BAT - see MX_ADC1_Init() */
     uint8_t ok = 1;
+    int8_t fail_rank = -1;
 
     HAL_ADC_Start(mq_adc);
     for (int i = 0; i < 3; i++)
@@ -47,6 +50,7 @@ MQ135_Data_t MQ135_Read(void)
         if (HAL_ADC_PollForConversion(mq_adc, MQ135_ADC_TIMEOUT_MS) != HAL_OK)
         {
             ok = 0;
+            fail_rank = (int8_t)i;
             break;
         }
         conv[i] = HAL_ADC_GetValue(mq_adc);
@@ -69,6 +73,10 @@ MQ135_Data_t MQ135_Read(void)
     }
 
     g_mq135_data = d;
+    g_mq135_fail_rank = fail_rank;
+    for (int i = 0; i < 3; i++)
+        g_mq135_conv_raw[i] = conv[i];
+
     return d;
 }
 

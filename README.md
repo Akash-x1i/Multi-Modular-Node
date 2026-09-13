@@ -1,8 +1,33 @@
 # Multi Modular Node
 
-STM32U031F8P6-based sensor/radio node. This README documents the pinout, how
-each sensor/module driver works, which demo functions exist, and what's
-currently active in `main.c` vs. wired-but-disabled.
+Two-board system: an STM32U031F8P6 **sensor node** (this repo) reads BMP280 +
+MQ135 and transmits an aggregated telemetry packet over NRF24L01 to an ESP32
+**gateway node**, which timestamps it with a DS3231 RTC and prints it to the
+serial console. This README documents the pinout for both boards, how each
+sensor/module driver works, which demo functions exist, and what's currently
+active vs. wired-but-disabled.
+
+## System architecture
+
+```
+ STM32 sensor node                                ESP32 gateway node
+┌─────────────────────┐                          ┌─────────────────────┐
+│ BMP280 (SPI2)        │                          │                     │
+│ MQ135  (ADC1)        │──> TelemetryPacket_t ──> │ NRF24L01 (RF24 lib) │
+│ W25Q64 flash (SPI2)  │    over NRF24L01,         │ DS3231 RTC (I2C)    │
+│ NRF24L01 (SPI2)      │    channel 76,            │ -> Serial console   │
+└─────────────────────┘    addr E7E7E7E7E7        └─────────────────────┘
+```
+
+- **Sensor node** (`Core/`, this STM32CubeIDE project): see
+  [Sensor node — STM32U031F8P6](#sensor-node--stm32u031f8p6) below.
+- **Gateway node** (`Gateway_ESP32/Gateway_ESP32.ino`, Arduino IDE): see
+  [Gateway node — ESP32](#gateway-node--esp32) below.
+- **Wire format**: see [Telemetry packet format](#telemetry-packet-format) -
+  both sides must agree on this byte layout since it's raw bytes over the
+  air, not any self-describing format.
+
+## Sensor node — STM32U031F8P6
 
 - MCU: STM32U031F8P6 (Cortex-M0+, 20-pin TSSOP package)
 - Toolchain: STM32CubeIDE
@@ -28,7 +53,7 @@ currently active in `main.c` vs. wired-but-disabled.
 | `HC_ECHO` | PC14 | GPIOC | Input | Reserved for an HC-SR04 ultrasonic sensor (no driver yet) |
 | `DHT_DATA` | PC15 | GPIOC | Output (switched to input during reads) | [DHT22](#dht22-temperaturehumidity) |
 | `TURBIDITY_ADC` | PA0 | GPIOA | Analog (ADC1_IN4) | Turbidity sensor (no driver yet - see [ADC bus](#adc1---shared-3-channel-scan)) |
-| `MQ135_ADC` | PA3 | GPIOA | Analog (ADC1_IN7) | [MQ135](#mq135-air-quality) - **currently disconnected** |
+| `MQ135_ADC` | PA3 | GPIOA | Analog (ADC1_IN7) | [MQ135](#mq135-air-quality) |
 | `BAT_ADC` | PA5 | GPIOA | Analog (ADC1_IN9) | Battery voltage sense (no driver yet) |
 | `BMP_CS` | PB1 | GPIOB | Output | [BMP280](#bmp280-pressuretemperature) |
 | `NRF_CSN` | PA8 | GPIOA | Output | [NRF24L01](#nrf24l01-radio) |
@@ -85,13 +110,22 @@ view without catching a breakpoint mid-transaction - see
 
 ### BMP280 (pressure/temperature)
 
-- Files: `Core/Inc/bmp280.c` (yes, a `.c` in `Inc/` - see [Build notes](#build-notes-stm32cubeide-quirks))
+- Files: `Core/Inc/bmp280.h`, `Core/Inc/bmp280.c` (yes, a `.c` in `Inc/` - see
+  [Build notes](#build-notes-stm32cubeide-quirks))
 - Bus: SPI2, CS = `BMP_CS` (PB1)
-- Entry point: `BMP280_RunDemo()` - reads chip ID, calibration data, then
-  loops forever logging temperature/pressure over USART3
-- **Status: not called from `main()`** (`BMP280_RunDemo();` is commented out).
-  It also depends on `huart3`, which is itself commented out/unused in this
-  build - don't enable one without the other.
+- API: `BMP280_Init()` (reads chip ID + calibration, configures normal mode),
+  `BMP280_Read(BMP280_Data_t *out)` (blocking, returns `temperature_c` +
+  `pressure_hpa`)
+- Debug globals: `g_bmp280_status` (`BMP280_OK` / `BMP280_ERR_CHIP_ID`),
+  `g_bmp280_data` (last good reading), `g_bmp280_chip_id` (raw chip ID byte -
+  should read `0x58`)
+- Also still has `BMP280_RunDemo()` - a standalone free-running loop that
+  logs over USART3 instead of returning values. Kept for reference/bring-up
+  only; **not used by the sensor node's main loop** and depends on `huart3`,
+  which is commented out/unused in this build - don't call it without also
+  enabling UART.
+- **Status: active.** `BMP280_Init()` runs at boot; `BMP280_Read()` is called
+  every loop iteration and feeds the telemetry packet.
 
 ### W25Q64 (SPI NOR flash)
 
@@ -117,9 +151,11 @@ view without catching a breakpoint mid-transaction - see
 - Debug globals: `g_dht22_status` (`DHT22_OK` / `DHT22_ERR_TIMEOUT` /
   `DHT22_ERR_CHECKSUM`), `g_dht22_data` (last good reading),
   `g_dht22_raw[5]` (raw bytes, even from a failed transaction, for diagnosis)
-- **Status: currently commented out** in `main()` (`DHT22_Init()` and the
-  read call in the loop) - it was working, then disabled when the NRF24 went
-  in. Uncomment both lines to bring it back.
+- **Status: not part of this sensor node's wiring** (only BMP280, MQ135,
+  flash and NRF24 are wired on this board per the current build - DHT22 was
+  used earlier for bring-up/testing). `DHT22_Init()` and the read call are
+  commented out in `main()`, driver untouched - uncomment both lines and add
+  it to `TelemetryPacket_t` if you wire it back in.
 
 ### MQ135 (air quality)
 
@@ -131,16 +167,15 @@ view without catching a breakpoint mid-transaction - see
   running from 3.3V.
 - API: `MQ135_Init(&hadc1)`, `MQ135_Read()` (runs the full 3-channel scan,
   keeps rank 2), `MQ135_Demo()`
-- Output fields: `raw` (12-bit code), `voltage`, `rs_kohm` (derived sensor
-  resistance), `ratio` (Rs/Ro - the real trend indicator), `ppm_co2` (rough
-  estimate from a commonly-used curve fit - **not accurate without
-  calibrating `MQ135_RO_CLEAN_AIR` in `mq135.c` to your physical sensor**,
-  and running the heater at 3.3V instead of the datasheet's 5V makes it
-  rougher still)
+- Output fields: `ok` (1 if the ADC scan completed), `raw` (12-bit code),
+  `voltage`, `rs_kohm` (derived sensor resistance), `ratio` (Rs/Ro - the real
+  trend indicator), `ppm_co2` (rough estimate from a commonly-used curve fit
+  - **not accurate without calibrating `MQ135_RO_CLEAN_AIR` in `mq135.c` to
+  your physical sensor**, and running the heater at 3.3V instead of the
+  datasheet's 5V makes it rougher still)
 - Debug global: `g_mq135_data`
-- **Status: physically disconnected.** `MQ135_Init()` and `MQ135_Read()` are
-  commented out in `main()`. The driver code is untouched - reconnect the
-  sensor and uncomment both lines to bring it back.
+- **Status: active.** `MQ135_Init(&hadc1)` runs at boot; `MQ135_Read()` is
+  called every loop iteration and feeds the telemetry packet.
 
 ### NRF24L01 (radio)
 
@@ -172,8 +207,9 @@ view without catching a breakpoint mid-transaction - see
   - `g_nrf24_tx_count` - increments once per transmit
   - `g_nrf24_rx_buf[32]` / `g_nrf24_rx_count` - only used on the RX-role side
 - **Status: active.** `NRF24_Init(&hspi2)` runs at boot; the main loop
-  transmits a 4-byte incrementing sequence counter (zero-padded to the fixed
-  32-byte payload) every 2s.
+  transmits a `TelemetryPacket_t` (see
+  [Telemetry packet format](#telemetry-packet-format)) built from the latest
+  BMP280 + MQ135 readings every 2s.
 
 ## What's actually running right now
 
@@ -181,22 +217,109 @@ view without catching a breakpoint mid-transaction - see
 
 ```c
 W25Q64_Init(&hspi2);
+BMP280_Init();
+MQ135_Init(&hadc1);
 NRF24_Init(&hspi2);
-// DHT22, MQ135, W25Q64 demo, BMP280 demo are all commented out
+// DHT22, W25Q64 demo, BMP280 demo are all commented out / not wired
 
 while (1) {
     static uint32_t seq = 0;
-    uint8_t nrf_payload[32] = {0};
-    memcpy(nrf_payload, &seq, sizeof(seq));
-    NRF24_Transmit(nrf_payload, sizeof(nrf_payload)); /* -> g_nrf24_tx_status */
+    TelemetryPacket_t packet = {0};
+    BMP280_Data_t bmp_reading = {0};
+    MQ135_Data_t  mq_reading;
+
+    packet.seq = seq;
+    packet.bmp_ok = (BMP280_Read(&bmp_reading) == BMP280_OK);
+    packet.bmp_temp_c       = bmp_reading.temperature_c;
+    packet.bmp_pressure_hpa = bmp_reading.pressure_hpa;
+
+    mq_reading = MQ135_Read();
+    packet.mq135_ok      = mq_reading.ok;
+    packet.mq135_ratio   = mq_reading.ratio;
+    packet.mq135_ppm_co2 = mq_reading.ppm_co2;
+    packet.mq135_raw     = mq_reading.raw;
+
+    NRF24_Transmit((uint8_t *)&packet, sizeof(packet)); /* -> g_nrf24_tx_status */
     seq++;
     HAL_Delay(2000);
 }
 ```
 
-So: only the NRF24 radio is actively doing anything every 2 seconds. Every
-other driver is written, wired, and ready - just commented out one or two
-lines away from being re-enabled.
+So: every 2 seconds, the sensor node reads BMP280 + MQ135, packs both into
+one `TelemetryPacket_t`, and transmits it over NRF24 - that's what the ESP32
+gateway receives and prints. W25Q64 flash is initialized but not used for
+logging yet (available for that later); DHT22 and BMP280's own UART demo
+are written and wired-ready but not part of this loop.
+
+## Telemetry packet format
+
+Sent as the first 24 bytes of the fixed 32-byte NRF24 payload (rest
+zero-padded). Defined as `TelemetryPacket_t` in `Core/Src/main.c` (STM32
+side) and as `struct TelemetryPacket` in `Gateway_ESP32/Gateway_ESP32.ino`
+(ESP32 side) - **these two definitions must be kept byte-for-byte identical
+by hand**, there's no shared header between the two toolchains. Both sides
+are little-endian GCC targets with 32-bit IEEE754 floats, so the raw byte
+layout matches without conversion as long as the field order/types don't
+diverge.
+
+| Offset | Field | Type | Source |
+|---|---|---|---|
+| 0 | `seq` | `uint32_t` | Loop iteration counter |
+| 4 | `bmp_temp_c` | `float` | BMP280 temperature (°C) |
+| 8 | `bmp_pressure_hpa` | `float` | BMP280 pressure (hPa) |
+| 12 | `mq135_ratio` | `float` | MQ135 Rs/Ro |
+| 16 | `mq135_ppm_co2` | `float` | MQ135 rough CO2 estimate (ppm) |
+| 20 | `mq135_raw` | `uint16_t` | MQ135 raw 12-bit ADC code |
+| 22 | `bmp_ok` | `uint8_t` | 1 if `BMP280_Read()` succeeded |
+| 23 | `mq135_ok` | `uint8_t` | 1 if the MQ135 ADC scan completed |
+
+## Gateway node — ESP32
+
+Receives the telemetry packet over NRF24L01, timestamps it with a DS3231
+RTC, and prints one line per packet to the serial console (115200 baud).
+
+- Sketch: `Gateway_ESP32/Gateway_ESP32.ino` (Arduino IDE - folder name must
+  match the `.ino` filename, already set up that way)
+- Libraries (Arduino IDE → Tools → Manage Libraries...):
+  - **RF24** by TMRh20 (the STM32 side uses a custom bare-register driver,
+    not this library - both are just configured to match on channel/
+    address/payload size/CRC/data rate/PA level, which is all that matters
+    for two nRF24L01s to interoperate)
+  - **RTClib** by Adafruit
+- **Status: NRF24L01 + RTC only.** The A7670C 4G module mentioned in the
+  wiring notes is not wired or used by this sketch yet.
+
+### NRF24L01 (SPI)
+
+| NRF24L01 pin | ESP32 pin |
+|---|---|
+| VCC | 3.3V (+ 10-47µF cap across VCC/GND at the module) |
+| GND | GND |
+| CE | GPIO4 |
+| CSN | GPIO5 |
+| SCK | GPIO18 (VSPI default) |
+| MOSI | GPIO23 (VSPI default) |
+| MISO | GPIO19 (VSPI default) |
+| IRQ | not connected - sketch polls `radio.available()` |
+
+Radio config in the sketch (must match the STM32 side, see
+[NRF24L01 (radio)](#nrf24l01-radio) above): channel 76, address
+`E7 E7 E7 E7 E7`, 32-byte fixed payload, 16-bit CRC, 1Mbps, 0dBm PA,
+auto-ack **off**.
+
+### HW-084 / DS3231 RTC (I2C)
+
+| RTC pin | ESP32 pin |
+|---|---|
+| VCC | 3.3V or 5V (check your module) |
+| GND | GND |
+| SDA | GPIO21 |
+| SCL | GPIO22 |
+
+If the RTC lost power (dead/missing coin cell) or isn't found, the sketch
+falls back to stamping with its own compile time (or prints `[no RTC]` if
+it's not present at all) rather than blocking - replace the coin cell if you
+see the "lost power" message on every boot.
 
 ## Debugging with Live Expressions
 
