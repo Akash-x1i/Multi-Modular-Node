@@ -1,0 +1,58 @@
+../../Core/Inc/bmp280.c:111:16:BMP_CompensateTemp	1
+../../Core/Inc/bmp280.c:126:17:BMP_CompensatePressure	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:45:20:W25Q64_CS_High	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:40:20:W25Q64_CS_Low	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:47:20:DHT22_Write	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:66:20:NRF24_CeLow	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:65:20:NRF24_CsnHigh	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:64:20:NRF24_CsnLow	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:60:20:W25Q64_SPI_Rx	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:70:16:NRF24_ReadReg	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:101:16:NRF24_GetStatus	1
+../../Core/Inc/bmp280.c:64:13:BMP_WriteReg	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:55:20:W25Q64_SPI_Tx	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:69:13:W25Q64_SendAddr	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:121:13:W25Q64_WriteEnable	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:113:13:NRF24_FlushTx	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:82:13:NRF24_WriteReg	1
+../../Core/Inc/bmp280.c:54:13:BMP_ReadRegs	1
+../../Core/Inc/bmp280.c:90:13:BMP_ReadCalibration	1
+../../Core/Inc/bmp280.c:155:13:Log	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:28:13:DHT22_SetOutput	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:285:13:MX_ADC1_Init	5
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:91:13:NRF24_WriteRegMulti.constprop	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:129:13:NRF24_ApplyAddress	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:58:16:DHT22_WaitForLevel.constprop	3
+../../Core/Inc/bmp280.c:42:16:BMP_ReadReg.constprop	1
+../../Core/Inc/bmp280.c:167:6:BMP280_Init	1
+../../Core/Inc/bmp280.c:179:17:BMP280_Read	2
+../../Core/Inc/bmp280.c:218:6:BMP280_RunDemo	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:81:6:W25Q64_Init	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:88:10:W25Q64_ReadJEDECID	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:101:6:W25Q64_IsBusy	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:114:6:W25Q64_WaitUntilReady	2
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:129:6:W25Q64_ReadData	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:139:6:W25Q64_PageProgram	3
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:161:6:W25Q64_WritePages	4
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:183:6:W25Q64_SectorErase	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:195:6:W25Q64_ChipErase	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/w25q64.c:209:6:W25Q64_demo	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:70:6:DHT22_Init	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:77:16:DHT22_Read	12
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/dht22.c:152:6:DHT22_Demo	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/mq135.c:35:6:MQ135_Init	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/mq135.c:40:14:MQ135_Read	5
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/mq135.c:83:6:MQ135_Demo	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:167:9:NRF24_SelfTest	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:136:6:NRF24_Init	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:185:6:NRF24_SetAddress	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:191:6:NRF24_SetChannel	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:197:6:NRF24_SetTxMode	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:205:6:NRF24_SetRxMode	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:214:18:NRF24_Transmit	5
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:260:9:NRF24_Available	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:265:6:NRF24_Receive	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/nrf24.c:277:6:NRF24_Demo	1
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:245:6:SystemClock_Config	3
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:163:5:main	7
+/home/akash/Documents/SIH26/Multi Modular Node/Core/Src/main.c:556:6:Error_Handler	1

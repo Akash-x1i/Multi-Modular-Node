@@ -24,7 +24,7 @@
 #define MQ135_CO2_CURVE_A    116.6020682f
 #define MQ135_CO2_CURVE_B    2.769034857f
 
-#define MQ135_ADC_TIMEOUT_MS 10U
+#define MQ135_ADC_TIMEOUT_MS 10U  /* generous margin - a 16MHz-clocked 12-bit conversion takes well under 1us */
 
 static ADC_HandleTypeDef *mq_adc;
 

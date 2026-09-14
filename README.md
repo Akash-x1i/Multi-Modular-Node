@@ -94,10 +94,27 @@ A single `HAL_ADC_Start()` converts all three in sequence; a driver that only
 wants one of them (like `mq135.c`) still has to poll+`HAL_ADC_GetValue()`
 three times and keep the one it needs. See `MQ135_Read()` for the pattern.
 
-> **Fixed bug:** the original generated code only ever set
+> **Fixed bug #1:** the original generated code only ever set
 > `sConfig.Channel = ADC_CHANNEL_4` for all three ranks, so every conversion
 > silently read the turbidity pin. `MX_ADC1_Init()` now sets the channel
 > explicitly for each rank (see `main.c`).
+
+> **Fixed bug #2 (the big one):** rank 1 always converted fine, but rank 2
+> never did - `HAL_ADC_PollForConversion()` for it timed out no matter which
+> physical channel occupied that slot (confirmed by literally swapping which
+> sensor sat at rank 1 vs 2) and no matter how long the timeout was (tested up
+> to 1000ms, still nothing - so it wasn't marginal timing, the conversion
+> genuinely never started). Root cause: **on this ADC IP (STM32U0, shares it
+> with G0), a software-triggered scan only auto-advances through multiple
+> ranks if `ContinuousConvMode = ENABLE`.** With it `DISABLE`d, the ADC
+> converts rank 1 and then genuinely stops (clears `ADSTART`), waiting for a
+> new trigger that never comes - so ranks 2+ are stuck forever, regardless of
+> which channel they are. Source:
+> [ST Community - "STM32G0 ADC with Sequence but not DMA"](https://community.st.com/t5/stm32-mcus-products/stm32g0-adc-with-sequence-but-not-dma/td-p/581302).
+> Fixed by setting `ContinuousConvMode = ENABLE` in `MX_ADC1_Init()` - the
+> existing `HAL_ADC_Start()` → poll×3 → `HAL_ADC_Stop()` pattern in
+> `MQ135_Read()` already stops the ADC right after the 3rd conversion, before
+> continuous mode would ever wrap back around to rank 1.
 
 ## Sensor/module drivers
 
@@ -173,7 +190,11 @@ view without catching a breakpoint mid-transaction - see
   - **not accurate without calibrating `MQ135_RO_CLEAN_AIR` in `mq135.c` to
   your physical sensor**, and running the heater at 3.3V instead of the
   datasheet's 5V makes it rougher still)
-- Debug global: `g_mq135_data`
+- Debug globals: `g_mq135_data`; `g_mq135_fail_rank` (-1 if the last scan
+  fully succeeded, otherwise which rank index timed out) and
+  `g_mq135_conv_raw[3]` (raw codes obtained for each rank, even partway
+  through a failed scan) - added while chasing the `ContinuousConvMode` bug
+  below and left in as permanent diagnostics for the shared ADC scan.
 - **Status: active.** `MQ135_Init(&hadc1)` runs at boot; `MQ135_Read()` is
   called every loop iteration and feeds the telemetry packet.
 
@@ -209,7 +230,7 @@ view without catching a breakpoint mid-transaction - see
 - **Status: active.** `NRF24_Init(&hspi2)` runs at boot; the main loop
   transmits a `TelemetryPacket_t` (see
   [Telemetry packet format](#telemetry-packet-format)) built from the latest
-  BMP280 + MQ135 readings every 2s.
+  BMP280 + MQ135 readings every 5s.
 
 ## What's actually running right now
 
@@ -241,11 +262,11 @@ while (1) {
 
     NRF24_Transmit((uint8_t *)&packet, sizeof(packet)); /* -> g_nrf24_tx_status */
     seq++;
-    HAL_Delay(2000);
+    HAL_Delay(5000);
 }
 ```
 
-So: every 2 seconds, the sensor node reads BMP280 + MQ135, packs both into
+So: every 5 seconds, the sensor node reads BMP280 + MQ135, packs both into
 one `TelemetryPacket_t`, and transmits it over NRF24 - that's what the ESP32
 gateway receives and prints. W25Q64 flash is initialized but not used for
 logging yet (available for that later); DHT22 and BMP280's own UART demo

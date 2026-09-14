@@ -68,11 +68,6 @@ TIM_HandleTypeDef htim6;
 
 //UART_HandleTypeDef huart3;
 
-/* TEMPORARY DIAGNOSTIC - see MQ135_ChannelIsolationTest() below. Not part of
- * the normal driver; remove once the rank-2 ADC issue is understood. */
-volatile uint8_t  g_mq135_isolation_ok  = 0;
-volatile uint32_t g_mq135_isolation_raw = 0;
-
 /* USER CODE BEGIN PV */
 
 
@@ -86,73 +81,11 @@ static void MX_SPI2_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
-static void MQ135_ChannelIsolationTest(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-/* TEMPORARY DIAGNOSTIC - reconfigures hadc1 for a single-channel (MQ135,
- * ADC_CHANNEL_7 / PA3) conversion with no scan sequence at all, to find out
- * whether channel 7 works in isolation or whether it's specifically the
- * multi-rank scan that gets stuck on it. Restores the normal 3-channel scan
- * config via MX_ADC1_Init() before returning. Remove this whole function
- * (and its call in main(), and g_mq135_isolation_*) once the mystery's solved. */
-static void MQ135_ChannelIsolationTest(void)
-{
-    ADC_ChannelConfTypeDef sConfig = {0};
-
-    HAL_ADC_DeInit(&hadc1);
-
-    hadc1.Instance = ADC1;
-    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
-    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;   /* single channel, no scan */
-    hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-    hadc1.Init.LowPowerAutoWait = DISABLE;
-    hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = DISABLE;
-    hadc1.Init.NbrOfConversion = 1;
-    hadc1.Init.DiscontinuousConvMode = DISABLE;
-    hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = DISABLE;
-    hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
-    hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
-    hadc1.Init.OversamplingMode = DISABLE;
-    hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
-    if (HAL_ADC_Init(&hadc1) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    sConfig.Channel = ADC_CHANNEL_7; /* MQ135, PA3 - alone this time, as rank 1 */
-    sConfig.Rank = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    HAL_ADC_Start(&hadc1);
-    if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK)
-    {
-        g_mq135_isolation_raw = HAL_ADC_GetValue(&hadc1);
-        g_mq135_isolation_ok = 1;
-    }
-    else
-    {
-        g_mq135_isolation_raw = 0;
-        g_mq135_isolation_ok = 0;
-    }
-    HAL_ADC_Stop(&hadc1);
-
-    /* Restore the real 3-channel scan config exactly as MX_ADC1_Init() set it */
-    HAL_ADC_DeInit(&hadc1);
-    MX_ADC1_Init();
-}
 
 /* USER CODE END 0 */
 
@@ -202,8 +135,6 @@ int main(void)
   //  BMP280_RunDemo();
   //  W25Q64_demo();
 
-  MQ135_ChannelIsolationTest(); /* TEMPORARY - result in g_mq135_isolation_ok/_raw */
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -233,7 +164,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(2000);
+    HAL_Delay(5000);
   }
   /* USER CODE END 3 */
 }
@@ -305,7 +236,13 @@ static void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  /* MUST be ENABLE for a multi-rank scan to auto-advance past rank 1 on a
+   * single software trigger - with DISABLE, this ADC IP stops (clears
+   * ADSTART) after each individual conversion and waits for a new trigger,
+   * so ranks 2+ never fire no matter how long you poll. Our Start()->poll x
+   * NbrOfConversion->Stop() pattern already stops it before it would wrap
+   * back to rank 1. See README's ADC section for the full story. */
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 3;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;

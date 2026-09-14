@@ -254,6 +254,7 @@ NRF24_TxStatus_t NRF24_Transmit(const uint8_t *data, uint8_t len)
         result = NRF24_TX_TIMEOUT; /* check wiring/power/address/channel match on both ends */
 
     g_nrf24_tx_status = result;
+    g_nrf24_tx_count++;
     return result;
 }
 
@@ -284,8 +285,7 @@ void NRF24_Demo(void)
         uint8_t payload[NRF24_PAYLOAD_SIZE] = {0};
         memcpy(payload, &counter, sizeof(counter));
 
-        NRF24_Transmit(payload, sizeof(payload)); /* result mirrored into g_nrf24_tx_status */
-        g_nrf24_tx_count = counter;
+        NRF24_Transmit(payload, sizeof(payload)); /* result + count mirrored into g_nrf24_tx_status/_count */
         counter++;
 
         HAL_Delay(1000);
